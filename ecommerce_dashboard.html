@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecommerce Sales Intelligence Dashboard 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #1a2744;
+    --navy-light: #243460;
+    --teal: #00c6b8;
+    --teal-light: #e0faf9;
+    --amber: #f5a623;
+    --amber-light: #fff8e6;
+    --red: #e74c3c;
+    --red-light: #fdecea;
+    --green: #27ae60;
+    --green-light: #eafaf1;
+    --card-bg: #ffffff;
+    --bg: #f0f3f8;
+    --text-primary: #1a2744;
+    --text-secondary: #6b7a99;
+    --border: #e2e8f0;
+    --shadow: 0 2px 12px rgba(26,39,68,0.08);
+    --shadow-lg: 0 8px 32px rgba(26,39,68,0.13);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text-primary); font-size: 13px; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-lg);
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-logo { width: 36px; height: 36px; background: var(--teal); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .header h1 { color: #fff; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-sub { color: rgba(255,255,255,0.55); font-size: 11px; margin-top: 2px; }
+  .header-right { color: rgba(255,255,255,0.7); font-size: 12px; text-align: right; }
+  .live-dot { width: 8px; height: 8px; background: var(--teal); border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* FILTERS */
+  .filter-bar {
+    background: var(--card-bg); border-bottom: 1px solid var(--border);
+    padding: 14px 32px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    position: sticky; top: 72px; z-index: 90; box-shadow: 0 2px 8px rgba(26,39,68,0.05);
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-label { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .filter-select {
+    border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 28px 6px 10px;
+    font-size: 12px; font-family: inherit; color: var(--text-primary); background: var(--bg);
+    cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7a99'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+    transition: border-color 0.15s, box-shadow 0.15s; min-width: 130px;
+  }
+  .filter-select:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,198,184,0.15); }
+  .filter-select[multiple] { height: 72px; padding-right: 10px; background-image: none; }
+  .reset-btn {
+    background: var(--navy); color: #fff; border: none; border-radius: 8px;
+    padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background 0.2s; align-self: flex-end;
+  }
+  .reset-btn:hover { background: var(--navy-light); }
+
+  /* MAIN CONTENT */
+  .main { padding: 24px 32px; }
+
+  /* KPI CARDS */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card {
+    background: var(--card-bg); border-radius: 14px; padding: 20px 22px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--teal); }
+  .kpi-card.amber::before { background: var(--amber); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.purple::before { background: #8b5cf6; }
+  .kpi-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--text-secondary); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+  .kpi-icon { position: absolute; right: 16px; top: 16px; font-size: 22px; opacity: 0.12; }
+  .trend-up { color: var(--green); font-weight: 700; }
+  .trend-down { color: var(--red); font-weight: 700; }
+
+  /* CHART GRID */
+  .charts-grid { display: grid; gap: 20px; }
+  .row-2 { grid-template-columns: 1fr 1fr; }
+  .row-3 { grid-template-columns: 2fr 1fr; }
+  .row-3b { grid-template-columns: 1fr 2fr; }
+  .row-equal3 { grid-template-columns: 1fr 1fr 1fr; }
+  .row-full { grid-template-columns: 1fr; }
+
+  .chart-card {
+    background: var(--card-bg); border-radius: 14px; padding: 22px 24px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+  .chart-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .chart-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+  .chart-badge { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .badge-teal { background: var(--teal-light); color: #009990; }
+  .badge-amber { background: var(--amber-light); color: #b87a00; }
+  .badge-green { background: var(--green-light); color: #1a7a42; }
+  .chart-wrap { position: relative; }
+  .chart-wrap canvas { max-height: 280px; }
+  .chart-wrap.tall canvas { max-height: 360px; }
+  .chart-wrap.short canvas { max-height: 200px; }
+
+  /* INSIGHTS PANEL */
+  .insights-section { margin-top: 20px; }
+  .insights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .insight-card {
+    border-radius: 12px; padding: 16px 18px; display: flex; gap: 12px; align-items: flex-start;
+    border: 1px solid transparent;
+  }
+  .insight-card.info { background: #eff6ff; border-color: #bfdbfe; }
+  .insight-card.warning { background: var(--amber-light); border-color: #fcd34d; }
+  .insight-card.success { background: var(--green-light); border-color: #86efac; }
+  .insight-card.danger { background: var(--red-light); border-color: #fca5a5; }
+  .insight-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .insight-text { font-size: 12px; line-height: 1.6; color: var(--text-primary); font-weight: 500; }
+  .insight-text strong { color: var(--navy); }
+
+  /* MINI TABLE */
+  .mini-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .mini-table th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); padding: 6px 10px; border-bottom: 2px solid var(--border); text-align: left; }
+  .mini-table td { font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .mini-table tr:last-child td { border-bottom: none; }
+  .mini-table tr:hover td { background: var(--bg); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .tag-east { background: #dbeafe; color: #1e40af; }
+  .tag-west { background: #f3e8ff; color: #6b21a8; }
+  .tag-north { background: #dcfce7; color: #15803d; }
+  .tag-south { background: #fff7ed; color: #c2410c; }
+
+  /* HEATMAP */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap-table { border-collapse: collapse; width: 100%; font-size: 11px; }
+  .heatmap-table th { padding: 4px 6px; color: var(--text-secondary); font-weight: 600; text-align: center; }
+  .heatmap-table td { width: 28px; height: 28px; text-align: center; border-radius: 4px; font-size: 10px; font-weight: 600; color: var(--navy); cursor: default; transition: transform 0.1s; }
+  .heatmap-table td:hover { transform: scale(1.2); z-index: 1; }
+  .heatmap-row-label { text-align: right !important; padding-right: 8px; color: var(--text-secondary); font-weight: 600; width: 40px; }
+
+  /* SECTION HEADING */
+  .section-heading { font-size: 16px; font-weight: 700; color: var(--navy); margin: 28px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .section-dot { width: 10px; height: 10px; border-radius: 2px; background: var(--teal); }
+
+  /* DONUT LABELS */
+  .donut-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; justify-content: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .mb-20 { margin-bottom: 20px; }
+
+  @media (max-width: 1100px) {
+    .kpi-row { grid-template-columns: repeat(3, 1fr); }
+    .row-2, .row-3, .row-3b, .row-equal3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">📊</div>
+    <div>
+      <h1>Sales Intelligence Dashboard</h1>
+      <div class="header-sub">Ecommerce Performance · 2026 · India Market</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div><span class="live-dot"></span>Live Data · 200 Orders</div>
+    <div style="margin-top:4px">Jan – May 2026</div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <div class="filter-label">Month</div>
+    <select class="filter-select" id="f-month" onchange="applyFilters()">
+      <option value="All">All Months</option>
+      <option value="2026-01">January</option>
+      <option value="2026-02">February</option>
+      <option value="2026-03">March</option>
+      <option value="2026-04">April</option>
+      <option value="2026-05">May</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Region</div>
+    <select class="filter-select" id="f-region" multiple onchange="applyFilters()" title="Hold Ctrl to multi-select">
+      <option value="East" selected>East</option>
+      <option value="West" selected>West</option>
+      <option value="North" selected>North</option>
+      <option value="South" selected>South</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Category</div>
+    <select class="filter-select" id="f-category" multiple onchange="applyFilters()" title="Hold Ctrl to multi-select">
+      <option value="Electronics" selected>Electronics</option>
+      <option value="Fashion" selected>Fashion</option>
+      <option value="Accessories" selected>Accessories</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <div class="filter-label">Payment</div>
+    <select class="filter-select" id="f-payment" onchange="applyFilters()">
+      <option value="All">All Methods</option>
+      <option value="UPI">UPI</option>
+      <option value="Credit Card">Credit Card</option>
+      <option value="Debit Card">Debit Card</option>
+      <option value="Cash on Delivery">Cash on Delivery</option>
+    </select>
+  </div>
+  <button class="reset-btn" onclick="resetFilters()">↺ Reset</button>
+  <div style="margin-left:auto;font-size:11px;color:var(--text-secondary);align-self:flex-end;padding-bottom:2px" id="filter-count">Showing all 200 orders</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- KPI ROW -->
+  <div class="kpi-row" id="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="kpi-rev">—</div>
+      <div class="kpi-sub" id="kpi-rev-sub">—</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-value" id="kpi-orders">—</div>
+      <div class="kpi-sub" id="kpi-orders-sub">—</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">👤</div>
+      <div class="kpi-label">Unique Customers</div>
+      <div class="kpi-value" id="kpi-cust">—</div>
+      <div class="kpi-sub" id="kpi-cust-sub">—</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-icon">🛒</div>
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value" id="kpi-aov">—</div>
+      <div class="kpi-sub" id="kpi-aov-sub">—</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">Total Units Sold</div>
+      <div class="kpi-value" id="kpi-qty">—</div>
+      <div class="kpi-sub" id="kpi-qty-sub">—</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Monthly Trend + Category Donut -->
+  <div class="section-heading"><div class="section-dot"></div>Revenue Trends & Category Mix</div>
+  <div class="charts-grid row-3 mb-20">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Monthly Revenue Trend</div>
+          <div class="chart-subtitle">Revenue & Quantity sold by month</div>
+        </div>
+        <span class="chart-badge badge-teal">Line Chart</span>
+      </div>
+      <div class="chart-wrap tall">
+        <canvas id="chart-monthly"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Revenue by Category</div>
+          <div class="chart-subtitle">Share of wallet across categories</div>
+        </div>
+        <span class="chart-badge badge-amber">Donut</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-category" style="max-height:220px"></canvas>
+      </div>
+      <div class="donut-legend" id="cat-legend"></div>
+    </div>
+  </div>
+
+  <!-- ROW 2: Regional + Payment -->
+  <div class="section-heading"><div class="section-dot"></div>Regional & Payment Analysis</div>
+  <div class="charts-grid row-2 mb-20">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Regional Performance</div>
+          <div class="chart-subtitle">Revenue & avg order value per region</div>
+        </div>
+        <span class="chart-badge badge-teal">Bar + Line</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-region"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Payment Method Distribution</div>
+          <div class="chart-subtitle">Order count & revenue share by payment type</div>
+        </div>
+        <span class="chart-badge badge-amber">Pie</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-payment" style="max-height:250px"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Product Revenue + Scatter -->
+  <div class="section-heading"><div class="section-dot"></div>Product Intelligence</div>
+  <div class="charts-grid row-2 mb-20">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Revenue by Product (Ranked)</div>
+          <div class="chart-subtitle">Horizontal bar — color-coded by category</div>
+        </div>
+        <span class="chart-badge badge-teal">Bar Chart</span>
+      </div>
+      <div class="chart-wrap tall">
+        <canvas id="chart-product"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Revenue vs Quantity Bubble Chart</div>
+          <div class="chart-subtitle">Bubble size = avg order value per product</div>
+        </div>
+        <span class="chart-badge badge-amber">Bubble</span>
+      </div>
+      <div class="chart-wrap tall">
+        <canvas id="chart-bubble"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 4: Category by Region Stacked + AOV by payment -->
+  <div class="section-heading"><div class="section-dot"></div>Segment Deep Dive</div>
+  <div class="charts-grid row-3b mb-20">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Avg Order Value by Payment Method</div>
+          <div class="chart-subtitle">Which channels drive high-value orders?</div>
+        </div>
+        <span class="chart-badge badge-green">Bar Chart</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-aov-payment"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Category Revenue by Region (Stacked)</div>
+          <div class="chart-subtitle">Which regions drive which categories?</div>
+        </div>
+        <span class="chart-badge badge-teal">Stacked Bar</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-catregion"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 5: Price tier + top customers table -->
+  <div class="section-heading"><div class="section-dot"></div>Price Intelligence & Customer Leaders</div>
+  <div class="charts-grid row-2 mb-20">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Revenue by Price Tier</div>
+          <div class="chart-subtitle">Low (&lt;₹5K), Mid (₹5K–₹20K), High (&gt;₹20K)</div>
+        </div>
+        <span class="chart-badge badge-amber">Donut</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-price-tier" style="max-height:220px"></canvas>
+      </div>
+      <div class="donut-legend" id="tier-legend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Top 10 Customers by Revenue</div>
+          <div class="chart-subtitle">Ranked by total spend with order count</div>
+        </div>
+        <span class="chart-badge badge-green">Table</span>
+      </div>
+      <div style="overflow-y:auto;max-height:310px">
+        <table class="mini-table" id="top-cust-table">
+          <thead><tr><th>#</th><th>Customer ID</th><th>Revenue</th><th>Orders</th><th>Avg Value</th><th>Region</th></tr></thead>
+          <tbody id="top-cust-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 6: Orders Heatmap -->
+  <div class="section-heading"><div class="section-dot"></div>Order Activity Heatmap</div>
+  <div class="chart-card mb-20">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Daily Order Activity Heatmap</div>
+        <div class="chart-subtitle">Each cell = number of orders on that day · Darker = more activity</div>
+      </div>
+      <span class="chart-badge badge-teal">Heatmap</span>
+    </div>
+    <div class="heatmap-wrap">
+      <div id="heatmap-container"></div>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="section-heading"><div class="section-dot"></div>Automated Insights</div>
+  <div class="insights-grid" id="insights-grid"></div>
+
+  <div style="height:40px"></div>
+</div>
+
+<script>
+// ===== RAW DATA =====
+const RAW = [{"Order_ID":"ORD0001","Date":"2026-03-01","Customer_ID":"CUST877","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":5,"Price":2000,"Revenue":10000,"Payment_Method":"UPI"},{"Order_ID":"ORD0002","Date":"2026-01-23","Customer_ID":"CUST703","Product":"Watch","Category":"Accessories","Region":"South","Quantity":1,"Price":2500,"Revenue":2500,"Payment_Method":"UPI"},{"Order_ID":"ORD0003","Date":"2026-02-08","Customer_ID":"CUST138","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":2,"Price":1500,"Revenue":3000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0004","Date":"2026-03-01","Customer_ID":"CUST902","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":3,"Price":60000,"Revenue":180000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0005","Date":"2026-02-07","Customer_ID":"CUST167","Product":"Phone","Category":"Electronics","Region":"West","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"UPI"},{"Order_ID":"ORD0006","Date":"2026-03-10","Customer_ID":"CUST193","Product":"Phone","Category":"Electronics","Region":"North","Quantity":1,"Price":30000,"Revenue":30000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0007","Date":"2026-03-31","Customer_ID":"CUST878","Product":"Phone","Category":"Electronics","Region":"East","Quantity":4,"Price":30000,"Revenue":120000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0008","Date":"2026-02-27","Customer_ID":"CUST371","Product":"Headphones","Category":"Electronics","Region":"East","Quantity":4,"Price":1500,"Revenue":6000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0009","Date":"2026-04-16","Customer_ID":"CUST235","Product":"Bag","Category":"Accessories","Region":"West","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0010","Date":"2026-02-07","Customer_ID":"CUST817","Product":"T-Shirt","Category":"Fashion","Region":"West","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"UPI"},{"Order_ID":"ORD0011","Date":"2026-01-26","Customer_ID":"CUST283","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0012","Date":"2026-03-10","Customer_ID":"CUST826","Product":"T-Shirt","Category":"Fashion","Region":"South","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"UPI"},{"Order_ID":"ORD0013","Date":"2026-03-18","Customer_ID":"CUST633","Product":"Phone","Category":"Electronics","Region":"North","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0014","Date":"2026-03-26","Customer_ID":"CUST444","Product":"Watch","Category":"Accessories","Region":"West","Quantity":3,"Price":2500,"Revenue":7500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0015","Date":"2026-02-13","Customer_ID":"CUST705","Product":"Phone","Category":"Electronics","Region":"South","Quantity":2,"Price":30000,"Revenue":60000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0016","Date":"2026-03-22","Customer_ID":"CUST547","Product":"Bag","Category":"Accessories","Region":"West","Quantity":2,"Price":1800,"Revenue":3600,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0017","Date":"2026-01-07","Customer_ID":"CUST944","Product":"Headphones","Category":"Electronics","Region":"South","Quantity":1,"Price":1500,"Revenue":1500,"Payment_Method":"UPI"},{"Order_ID":"ORD0018","Date":"2026-04-23","Customer_ID":"CUST849","Product":"Bag","Category":"Accessories","Region":"East","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0019","Date":"2026-04-23","Customer_ID":"CUST520","Product":"Phone","Category":"Electronics","Region":"East","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"UPI"},{"Order_ID":"ORD0020","Date":"2026-01-25","Customer_ID":"CUST987","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":2,"Price":60000,"Revenue":120000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0021","Date":"2026-03-16","Customer_ID":"CUST374","Product":"Bag","Category":"Accessories","Region":"West","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0022","Date":"2026-04-14","Customer_ID":"CUST344","Product":"Phone","Category":"Electronics","Region":"North","Quantity":4,"Price":30000,"Revenue":120000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0023","Date":"2026-02-05","Customer_ID":"CUST582","Product":"Watch","Category":"Accessories","Region":"East","Quantity":2,"Price":2500,"Revenue":5000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0024","Date":"2026-01-13","Customer_ID":"CUST531","Product":"T-Shirt","Category":"Fashion","Region":"South","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0025","Date":"2026-01-01","Customer_ID":"CUST487","Product":"Watch","Category":"Accessories","Region":"East","Quantity":1,"Price":2500,"Revenue":2500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0026","Date":"2026-01-13","Customer_ID":"CUST448","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"UPI"},{"Order_ID":"ORD0027","Date":"2026-02-28","Customer_ID":"CUST256","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":5,"Price":60000,"Revenue":300000,"Payment_Method":"UPI"},{"Order_ID":"ORD0028","Date":"2026-03-29","Customer_ID":"CUST647","Product":"T-Shirt","Category":"Fashion","Region":"South","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0029","Date":"2026-03-05","Customer_ID":"CUST528","Product":"Bag","Category":"Accessories","Region":"East","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0030","Date":"2026-01-10","Customer_ID":"CUST323","Product":"Watch","Category":"Accessories","Region":"West","Quantity":3,"Price":2500,"Revenue":7500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0031","Date":"2026-04-13","Customer_ID":"CUST969","Product":"Watch","Category":"Accessories","Region":"South","Quantity":2,"Price":2500,"Revenue":5000,"Payment_Method":"UPI"},{"Order_ID":"ORD0032","Date":"2026-04-17","Customer_ID":"CUST342","Product":"Watch","Category":"Accessories","Region":"West","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0033","Date":"2026-02-17","Customer_ID":"CUST880","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":4,"Price":1500,"Revenue":6000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0034","Date":"2026-03-30","Customer_ID":"CUST439","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":2,"Price":2000,"Revenue":4000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0035","Date":"2026-02-06","Customer_ID":"CUST301","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":4,"Price":60000,"Revenue":240000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0036","Date":"2026-02-10","Customer_ID":"CUST989","Product":"Bag","Category":"Accessories","Region":"East","Quantity":1,"Price":1800,"Revenue":1800,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0037","Date":"2026-01-09","Customer_ID":"CUST179","Product":"Laptop","Category":"Electronics","Region":"South","Quantity":3,"Price":60000,"Revenue":180000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0038","Date":"2026-02-13","Customer_ID":"CUST348","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":1,"Price":60000,"Revenue":60000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0039","Date":"2026-03-29","Customer_ID":"CUST543","Product":"Bag","Category":"Accessories","Region":"West","Quantity":2,"Price":1800,"Revenue":3600,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0040","Date":"2026-03-11","Customer_ID":"CUST665","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":4,"Price":2000,"Revenue":8000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0041","Date":"2026-04-30","Customer_ID":"CUST908","Product":"Headphones","Category":"Electronics","Region":"North","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0042","Date":"2026-04-16","Customer_ID":"CUST604","Product":"Laptop","Category":"Electronics","Region":"South","Quantity":1,"Price":60000,"Revenue":60000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0043","Date":"2026-01-01","Customer_ID":"CUST890","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0044","Date":"2026-03-13","Customer_ID":"CUST447","Product":"Headphones","Category":"Electronics","Region":"East","Quantity":1,"Price":1500,"Revenue":1500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0045","Date":"2026-04-10","Customer_ID":"CUST755","Product":"T-Shirt","Category":"Fashion","Region":"South","Quantity":3,"Price":800,"Revenue":2400,"Payment_Method":"UPI"},{"Order_ID":"ORD0046","Date":"2026-02-18","Customer_ID":"CUST596","Product":"Bag","Category":"Accessories","Region":"North","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0047","Date":"2026-04-25","Customer_ID":"CUST383","Product":"Watch","Category":"Accessories","Region":"North","Quantity":1,"Price":2500,"Revenue":2500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0048","Date":"2026-04-30","Customer_ID":"CUST103","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0049","Date":"2026-03-15","Customer_ID":"CUST931","Product":"Headphones","Category":"Electronics","Region":"South","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"UPI"},{"Order_ID":"ORD0050","Date":"2026-04-07","Customer_ID":"CUST774","Product":"Headphones","Category":"Electronics","Region":"East","Quantity":2,"Price":1500,"Revenue":3000,"Payment_Method":"UPI"},{"Order_ID":"ORD0051","Date":"2026-02-13","Customer_ID":"CUST802","Product":"Shoes","Category":"Fashion","Region":"West","Quantity":4,"Price":2000,"Revenue":8000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0052","Date":"2026-04-07","Customer_ID":"CUST315","Product":"Bag","Category":"Accessories","Region":"North","Quantity":5,"Price":1800,"Revenue":9000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0053","Date":"2026-01-30","Customer_ID":"CUST268","Product":"Phone","Category":"Electronics","Region":"East","Quantity":5,"Price":30000,"Revenue":150000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0054","Date":"2026-04-24","Customer_ID":"CUST345","Product":"Watch","Category":"Accessories","Region":"West","Quantity":3,"Price":2500,"Revenue":7500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0055","Date":"2026-03-22","Customer_ID":"CUST852","Product":"Phone","Category":"Electronics","Region":"South","Quantity":4,"Price":30000,"Revenue":120000,"Payment_Method":"UPI"},{"Order_ID":"ORD0056","Date":"2026-04-17","Customer_ID":"CUST629","Product":"Watch","Category":"Accessories","Region":"West","Quantity":4,"Price":2500,"Revenue":10000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0057","Date":"2026-03-14","Customer_ID":"CUST734","Product":"Bag","Category":"Accessories","Region":"North","Quantity":1,"Price":1800,"Revenue":1800,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0058","Date":"2026-04-14","Customer_ID":"CUST720","Product":"Phone","Category":"Electronics","Region":"West","Quantity":2,"Price":30000,"Revenue":60000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0059","Date":"2026-02-06","Customer_ID":"CUST121","Product":"Headphones","Category":"Electronics","Region":"South","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"UPI"},{"Order_ID":"ORD0060","Date":"2026-04-20","Customer_ID":"CUST893","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":5,"Price":2000,"Revenue":10000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0061","Date":"2026-03-06","Customer_ID":"CUST507","Product":"Watch","Category":"Accessories","Region":"North","Quantity":4,"Price":2500,"Revenue":10000,"Payment_Method":"UPI"},{"Order_ID":"ORD0062","Date":"2026-01-04","Customer_ID":"CUST374","Product":"Watch","Category":"Accessories","Region":"South","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0063","Date":"2026-03-22","Customer_ID":"CUST192","Product":"T-Shirt","Category":"Fashion","Region":"West","Quantity":3,"Price":800,"Revenue":2400,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0064","Date":"2026-01-19","Customer_ID":"CUST902","Product":"Headphones","Category":"Electronics","Region":"North","Quantity":5,"Price":1500,"Revenue":7500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0065","Date":"2026-01-22","Customer_ID":"CUST613","Product":"Watch","Category":"Accessories","Region":"West","Quantity":4,"Price":2500,"Revenue":10000,"Payment_Method":"UPI"},{"Order_ID":"ORD0066","Date":"2026-04-16","Customer_ID":"CUST766","Product":"Phone","Category":"Electronics","Region":"East","Quantity":5,"Price":30000,"Revenue":150000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0067","Date":"2026-01-25","Customer_ID":"CUST740","Product":"T-Shirt","Category":"Fashion","Region":"East","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0068","Date":"2026-03-15","Customer_ID":"CUST828","Product":"T-Shirt","Category":"Fashion","Region":"East","Quantity":1,"Price":800,"Revenue":800,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0069","Date":"2026-04-14","Customer_ID":"CUST856","Product":"Bag","Category":"Accessories","Region":"West","Quantity":2,"Price":1800,"Revenue":3600,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0070","Date":"2026-02-25","Customer_ID":"CUST597","Product":"Bag","Category":"Accessories","Region":"North","Quantity":1,"Price":1800,"Revenue":1800,"Payment_Method":"UPI"},{"Order_ID":"ORD0071","Date":"2026-04-05","Customer_ID":"CUST382","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":1,"Price":60000,"Revenue":60000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0072","Date":"2026-04-24","Customer_ID":"CUST430","Product":"Laptop","Category":"Electronics","Region":"South","Quantity":4,"Price":60000,"Revenue":240000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0073","Date":"2026-02-28","Customer_ID":"CUST610","Product":"Watch","Category":"Accessories","Region":"North","Quantity":2,"Price":2500,"Revenue":5000,"Payment_Method":"UPI"},{"Order_ID":"ORD0074","Date":"2026-03-13","Customer_ID":"CUST129","Product":"Watch","Category":"Accessories","Region":"South","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"UPI"},{"Order_ID":"ORD0075","Date":"2026-01-13","Customer_ID":"CUST134","Product":"Headphones","Category":"Electronics","Region":"South","Quantity":1,"Price":1500,"Revenue":1500,"Payment_Method":"UPI"},{"Order_ID":"ORD0076","Date":"2026-04-29","Customer_ID":"CUST878","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0077","Date":"2026-01-30","Customer_ID":"CUST191","Product":"Laptop","Category":"Electronics","Region":"South","Quantity":3,"Price":60000,"Revenue":180000,"Payment_Method":"UPI"},{"Order_ID":"ORD0078","Date":"2026-02-11","Customer_ID":"CUST445","Product":"Watch","Category":"Accessories","Region":"North","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0079","Date":"2026-01-12","Customer_ID":"CUST808","Product":"Shoes","Category":"Fashion","Region":"West","Quantity":5,"Price":2000,"Revenue":10000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0080","Date":"2026-03-28","Customer_ID":"CUST564","Product":"Headphones","Category":"Electronics","Region":"North","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0081","Date":"2026-02-03","Customer_ID":"CUST946","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":5,"Price":2000,"Revenue":10000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0082","Date":"2026-04-12","Customer_ID":"CUST706","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":5,"Price":1500,"Revenue":7500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0083","Date":"2026-04-09","Customer_ID":"CUST893","Product":"T-Shirt","Category":"Fashion","Region":"North","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0084","Date":"2026-01-06","Customer_ID":"CUST865","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0085","Date":"2026-01-17","Customer_ID":"CUST913","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":4,"Price":2000,"Revenue":8000,"Payment_Method":"UPI"},{"Order_ID":"ORD0086","Date":"2026-01-05","Customer_ID":"CUST805","Product":"Bag","Category":"Accessories","Region":"East","Quantity":2,"Price":1800,"Revenue":3600,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0087","Date":"2026-01-04","Customer_ID":"CUST340","Product":"Watch","Category":"Accessories","Region":"North","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0088","Date":"2026-05-01","Customer_ID":"CUST780","Product":"T-Shirt","Category":"Fashion","Region":"East","Quantity":1,"Price":800,"Revenue":800,"Payment_Method":"UPI"},{"Order_ID":"ORD0089","Date":"2026-04-28","Customer_ID":"CUST240","Product":"Watch","Category":"Accessories","Region":"West","Quantity":1,"Price":2500,"Revenue":2500,"Payment_Method":"UPI"},{"Order_ID":"ORD0090","Date":"2026-04-01","Customer_ID":"CUST119","Product":"Headphones","Category":"Electronics","Region":"East","Quantity":2,"Price":1500,"Revenue":3000,"Payment_Method":"UPI"},{"Order_ID":"ORD0091","Date":"2026-03-04","Customer_ID":"CUST757","Product":"Phone","Category":"Electronics","Region":"East","Quantity":2,"Price":30000,"Revenue":60000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0092","Date":"2026-02-17","Customer_ID":"CUST629","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0093","Date":"2026-01-05","Customer_ID":"CUST459","Product":"T-Shirt","Category":"Fashion","Region":"North","Quantity":1,"Price":800,"Revenue":800,"Payment_Method":"UPI"},{"Order_ID":"ORD0094","Date":"2026-04-16","Customer_ID":"CUST858","Product":"T-Shirt","Category":"Fashion","Region":"East","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0095","Date":"2026-04-01","Customer_ID":"CUST765","Product":"Phone","Category":"Electronics","Region":"South","Quantity":5,"Price":30000,"Revenue":150000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0096","Date":"2026-01-20","Customer_ID":"CUST917","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":4,"Price":60000,"Revenue":240000,"Payment_Method":"UPI"},{"Order_ID":"ORD0097","Date":"2026-03-13","Customer_ID":"CUST162","Product":"Bag","Category":"Accessories","Region":"North","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"UPI"},{"Order_ID":"ORD0098","Date":"2026-04-24","Customer_ID":"CUST604","Product":"Headphones","Category":"Electronics","Region":"South","Quantity":1,"Price":1500,"Revenue":1500,"Payment_Method":"UPI"},{"Order_ID":"ORD0099","Date":"2026-04-02","Customer_ID":"CUST495","Product":"Headphones","Category":"Electronics","Region":"East","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0100","Date":"2026-02-25","Customer_ID":"CUST383","Product":"Shoes","Category":"Fashion","Region":"West","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0101","Date":"2026-01-25","Customer_ID":"CUST558","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":3,"Price":60000,"Revenue":180000,"Payment_Method":"UPI"},{"Order_ID":"ORD0102","Date":"2026-03-21","Customer_ID":"CUST995","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0103","Date":"2026-04-03","Customer_ID":"CUST421","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":2,"Price":60000,"Revenue":120000,"Payment_Method":"UPI"},{"Order_ID":"ORD0104","Date":"2026-03-21","Customer_ID":"CUST571","Product":"T-Shirt","Category":"Fashion","Region":"East","Quantity":2,"Price":800,"Revenue":1600,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0105","Date":"2026-04-04","Customer_ID":"CUST727","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0106","Date":"2026-01-22","Customer_ID":"CUST539","Product":"T-Shirt","Category":"Fashion","Region":"North","Quantity":5,"Price":800,"Revenue":4000,"Payment_Method":"UPI"},{"Order_ID":"ORD0107","Date":"2026-04-09","Customer_ID":"CUST979","Product":"Headphones","Category":"Electronics","Region":"East","Quantity":4,"Price":1500,"Revenue":6000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0108","Date":"2026-03-15","Customer_ID":"CUST580","Product":"Bag","Category":"Accessories","Region":"South","Quantity":3,"Price":1800,"Revenue":5400,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0109","Date":"2026-03-11","Customer_ID":"CUST474","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":4,"Price":1500,"Revenue":6000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0110","Date":"2026-02-20","Customer_ID":"CUST166","Product":"Phone","Category":"Electronics","Region":"West","Quantity":5,"Price":30000,"Revenue":150000,"Payment_Method":"UPI"},{"Order_ID":"ORD0111","Date":"2026-02-10","Customer_ID":"CUST910","Product":"Bag","Category":"Accessories","Region":"South","Quantity":3,"Price":1800,"Revenue":5400,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0112","Date":"2026-02-23","Customer_ID":"CUST891","Product":"Watch","Category":"Accessories","Region":"East","Quantity":2,"Price":2500,"Revenue":5000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0113","Date":"2026-03-15","Customer_ID":"CUST365","Product":"Phone","Category":"Electronics","Region":"West","Quantity":4,"Price":30000,"Revenue":120000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0114","Date":"2026-01-01","Customer_ID":"CUST591","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":2,"Price":2000,"Revenue":4000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0115","Date":"2026-03-29","Customer_ID":"CUST828","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":1,"Price":1500,"Revenue":1500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0116","Date":"2026-02-10","Customer_ID":"CUST902","Product":"Phone","Category":"Electronics","Region":"East","Quantity":4,"Price":30000,"Revenue":120000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0117","Date":"2026-04-24","Customer_ID":"CUST713","Product":"T-Shirt","Category":"Fashion","Region":"South","Quantity":2,"Price":800,"Revenue":1600,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0118","Date":"2026-02-23","Customer_ID":"CUST447","Product":"Watch","Category":"Accessories","Region":"West","Quantity":3,"Price":2500,"Revenue":7500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0119","Date":"2026-01-31","Customer_ID":"CUST707","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":2,"Price":2000,"Revenue":4000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0120","Date":"2026-02-01","Customer_ID":"CUST773","Product":"Laptop","Category":"Electronics","Region":"West","Quantity":1,"Price":60000,"Revenue":60000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0121","Date":"2026-02-28","Customer_ID":"CUST880","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":5,"Price":1500,"Revenue":7500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0122","Date":"2026-03-17","Customer_ID":"CUST381","Product":"Watch","Category":"Accessories","Region":"North","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0123","Date":"2026-01-17","Customer_ID":"CUST854","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":2,"Price":2000,"Revenue":4000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0124","Date":"2026-01-08","Customer_ID":"CUST453","Product":"Phone","Category":"Electronics","Region":"South","Quantity":4,"Price":30000,"Revenue":120000,"Payment_Method":"UPI"},{"Order_ID":"ORD0125","Date":"2026-02-28","Customer_ID":"CUST593","Product":"Bag","Category":"Accessories","Region":"North","Quantity":3,"Price":1800,"Revenue":5400,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0126","Date":"2026-02-09","Customer_ID":"CUST872","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0127","Date":"2026-02-16","Customer_ID":"CUST517","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":5,"Price":60000,"Revenue":300000,"Payment_Method":"UPI"},{"Order_ID":"ORD0128","Date":"2026-02-02","Customer_ID":"CUST530","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"UPI"},{"Order_ID":"ORD0129","Date":"2026-01-05","Customer_ID":"CUST299","Product":"Watch","Category":"Accessories","Region":"West","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0130","Date":"2026-03-09","Customer_ID":"CUST364","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":2,"Price":2000,"Revenue":4000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0131","Date":"2026-04-13","Customer_ID":"CUST250","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":1,"Price":60000,"Revenue":60000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0132","Date":"2026-02-19","Customer_ID":"CUST279","Product":"Phone","Category":"Electronics","Region":"West","Quantity":4,"Price":30000,"Revenue":120000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0133","Date":"2026-02-03","Customer_ID":"CUST691","Product":"T-Shirt","Category":"Fashion","Region":"South","Quantity":3,"Price":800,"Revenue":2400,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0134","Date":"2026-03-26","Customer_ID":"CUST113","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":5,"Price":60000,"Revenue":300000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0135","Date":"2026-02-02","Customer_ID":"CUST139","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":1,"Price":60000,"Revenue":60000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0136","Date":"2026-02-13","Customer_ID":"CUST574","Product":"Headphones","Category":"Electronics","Region":"North","Quantity":4,"Price":1500,"Revenue":6000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0137","Date":"2026-02-07","Customer_ID":"CUST352","Product":"Phone","Category":"Electronics","Region":"East","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0138","Date":"2026-02-06","Customer_ID":"CUST334","Product":"Watch","Category":"Accessories","Region":"West","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0139","Date":"2026-03-11","Customer_ID":"CUST432","Product":"Phone","Category":"Electronics","Region":"East","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"UPI"},{"Order_ID":"ORD0140","Date":"2026-03-23","Customer_ID":"CUST850","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":4,"Price":2000,"Revenue":8000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0141","Date":"2026-01-25","Customer_ID":"CUST871","Product":"Phone","Category":"Electronics","Region":"South","Quantity":1,"Price":30000,"Revenue":30000,"Payment_Method":"UPI"},{"Order_ID":"ORD0142","Date":"2026-03-10","Customer_ID":"CUST129","Product":"Watch","Category":"Accessories","Region":"North","Quantity":3,"Price":2500,"Revenue":7500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0143","Date":"2026-03-19","Customer_ID":"CUST302","Product":"Bag","Category":"Accessories","Region":"South","Quantity":2,"Price":1800,"Revenue":3600,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0144","Date":"2026-02-01","Customer_ID":"CUST758","Product":"Phone","Category":"Electronics","Region":"East","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0145","Date":"2026-03-22","Customer_ID":"CUST853","Product":"Bag","Category":"Accessories","Region":"North","Quantity":5,"Price":1800,"Revenue":9000,"Payment_Method":"UPI"},{"Order_ID":"ORD0146","Date":"2026-03-14","Customer_ID":"CUST327","Product":"Phone","Category":"Electronics","Region":"South","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0147","Date":"2026-02-12","Customer_ID":"CUST685","Product":"T-Shirt","Category":"Fashion","Region":"South","Quantity":1,"Price":800,"Revenue":800,"Payment_Method":"UPI"},{"Order_ID":"ORD0148","Date":"2026-03-27","Customer_ID":"CUST187","Product":"Shoes","Category":"Fashion","Region":"West","Quantity":5,"Price":2000,"Revenue":10000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0149","Date":"2026-03-04","Customer_ID":"CUST354","Product":"Watch","Category":"Accessories","Region":"East","Quantity":2,"Price":2500,"Revenue":5000,"Payment_Method":"UPI"},{"Order_ID":"ORD0150","Date":"2026-04-03","Customer_ID":"CUST243","Product":"Bag","Category":"Accessories","Region":"West","Quantity":2,"Price":1800,"Revenue":3600,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0151","Date":"2026-03-11","Customer_ID":"CUST496","Product":"T-Shirt","Category":"Fashion","Region":"North","Quantity":3,"Price":800,"Revenue":2400,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0152","Date":"2026-04-27","Customer_ID":"CUST622","Product":"Watch","Category":"Accessories","Region":"South","Quantity":5,"Price":2500,"Revenue":12500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0153","Date":"2026-03-11","Customer_ID":"CUST954","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":4,"Price":2000,"Revenue":8000,"Payment_Method":"UPI"},{"Order_ID":"ORD0154","Date":"2026-04-22","Customer_ID":"CUST485","Product":"Phone","Category":"Electronics","Region":"South","Quantity":1,"Price":30000,"Revenue":30000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0155","Date":"2026-01-25","Customer_ID":"CUST308","Product":"Watch","Category":"Accessories","Region":"East","Quantity":4,"Price":2500,"Revenue":10000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0156","Date":"2026-03-18","Customer_ID":"CUST752","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":5,"Price":2000,"Revenue":10000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0157","Date":"2026-02-05","Customer_ID":"CUST306","Product":"Laptop","Category":"Electronics","Region":"West","Quantity":4,"Price":60000,"Revenue":240000,"Payment_Method":"UPI"},{"Order_ID":"ORD0158","Date":"2026-04-07","Customer_ID":"CUST796","Product":"Headphones","Category":"Electronics","Region":"South","Quantity":2,"Price":1500,"Revenue":3000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0159","Date":"2026-04-30","Customer_ID":"CUST710","Product":"Laptop","Category":"Electronics","Region":"West","Quantity":2,"Price":60000,"Revenue":120000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0160","Date":"2026-02-01","Customer_ID":"CUST433","Product":"Bag","Category":"Accessories","Region":"East","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0161","Date":"2026-02-27","Customer_ID":"CUST464","Product":"Watch","Category":"Accessories","Region":"South","Quantity":4,"Price":2500,"Revenue":10000,"Payment_Method":"UPI"},{"Order_ID":"ORD0162","Date":"2026-03-04","Customer_ID":"CUST466","Product":"T-Shirt","Category":"Fashion","Region":"East","Quantity":1,"Price":800,"Revenue":800,"Payment_Method":"UPI"},{"Order_ID":"ORD0163","Date":"2026-03-09","Customer_ID":"CUST569","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0164","Date":"2026-03-14","Customer_ID":"CUST598","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":5,"Price":60000,"Revenue":300000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0165","Date":"2026-01-10","Customer_ID":"CUST525","Product":"Bag","Category":"Accessories","Region":"East","Quantity":4,"Price":1800,"Revenue":7200,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0166","Date":"2026-02-16","Customer_ID":"CUST670","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":5,"Price":60000,"Revenue":300000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0167","Date":"2026-01-27","Customer_ID":"CUST582","Product":"Bag","Category":"Accessories","Region":"West","Quantity":2,"Price":1800,"Revenue":3600,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0168","Date":"2026-03-08","Customer_ID":"CUST952","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":4,"Price":60000,"Revenue":240000,"Payment_Method":"UPI"},{"Order_ID":"ORD0169","Date":"2026-01-19","Customer_ID":"CUST865","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":5,"Price":1500,"Revenue":7500,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0170","Date":"2026-01-30","Customer_ID":"CUST199","Product":"Phone","Category":"Electronics","Region":"South","Quantity":5,"Price":30000,"Revenue":150000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0171","Date":"2026-03-21","Customer_ID":"CUST243","Product":"Headphones","Category":"Electronics","Region":"North","Quantity":1,"Price":1500,"Revenue":1500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0172","Date":"2026-01-26","Customer_ID":"CUST189","Product":"Laptop","Category":"Electronics","Region":"West","Quantity":5,"Price":60000,"Revenue":300000,"Payment_Method":"UPI"},{"Order_ID":"ORD0173","Date":"2026-01-16","Customer_ID":"CUST872","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":4,"Price":60000,"Revenue":240000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0174","Date":"2026-01-09","Customer_ID":"CUST787","Product":"Headphones","Category":"Electronics","Region":"North","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0175","Date":"2026-03-26","Customer_ID":"CUST814","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0176","Date":"2026-04-06","Customer_ID":"CUST620","Product":"Laptop","Category":"Electronics","Region":"West","Quantity":3,"Price":60000,"Revenue":180000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0177","Date":"2026-01-26","Customer_ID":"CUST415","Product":"Shoes","Category":"Fashion","Region":"South","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0178","Date":"2026-02-22","Customer_ID":"CUST797","Product":"T-Shirt","Category":"Fashion","Region":"North","Quantity":3,"Price":800,"Revenue":2400,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0179","Date":"2026-01-24","Customer_ID":"CUST661","Product":"Phone","Category":"Electronics","Region":"East","Quantity":5,"Price":30000,"Revenue":150000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0180","Date":"2026-04-13","Customer_ID":"CUST576","Product":"Laptop","Category":"Electronics","Region":"West","Quantity":2,"Price":60000,"Revenue":120000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0181","Date":"2026-01-31","Customer_ID":"CUST283","Product":"Shoes","Category":"Fashion","Region":"West","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0182","Date":"2026-03-17","Customer_ID":"CUST227","Product":"Headphones","Category":"Electronics","Region":"South","Quantity":1,"Price":1500,"Revenue":1500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0183","Date":"2026-04-18","Customer_ID":"CUST487","Product":"Shoes","Category":"Fashion","Region":"East","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0184","Date":"2026-05-01","Customer_ID":"CUST965","Product":"Phone","Category":"Electronics","Region":"West","Quantity":3,"Price":30000,"Revenue":90000,"Payment_Method":"UPI"},{"Order_ID":"ORD0185","Date":"2026-03-13","Customer_ID":"CUST138","Product":"T-Shirt","Category":"Fashion","Region":"East","Quantity":4,"Price":800,"Revenue":3200,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0186","Date":"2026-04-10","Customer_ID":"CUST412","Product":"Laptop","Category":"Electronics","Region":"South","Quantity":1,"Price":60000,"Revenue":60000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0187","Date":"2026-01-04","Customer_ID":"CUST778","Product":"Watch","Category":"Accessories","Region":"North","Quantity":4,"Price":2500,"Revenue":10000,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0188","Date":"2026-03-02","Customer_ID":"CUST379","Product":"Phone","Category":"Electronics","Region":"West","Quantity":5,"Price":30000,"Revenue":150000,"Payment_Method":"UPI"},{"Order_ID":"ORD0189","Date":"2026-01-27","Customer_ID":"CUST748","Product":"Watch","Category":"Accessories","Region":"East","Quantity":1,"Price":2500,"Revenue":2500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0190","Date":"2026-01-05","Customer_ID":"CUST104","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":1,"Price":2000,"Revenue":2000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0191","Date":"2026-01-10","Customer_ID":"CUST978","Product":"Watch","Category":"Accessories","Region":"South","Quantity":2,"Price":2500,"Revenue":5000,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0192","Date":"2026-04-01","Customer_ID":"CUST736","Product":"Watch","Category":"Accessories","Region":"West","Quantity":3,"Price":2500,"Revenue":7500,"Payment_Method":"Cash on Delivery"},{"Order_ID":"ORD0193","Date":"2026-01-07","Customer_ID":"CUST742","Product":"Laptop","Category":"Electronics","Region":"North","Quantity":2,"Price":60000,"Revenue":120000,"Payment_Method":"UPI"},{"Order_ID":"ORD0194","Date":"2026-01-11","Customer_ID":"CUST277","Product":"Laptop","Category":"Electronics","Region":"East","Quantity":4,"Price":60000,"Revenue":240000,"Payment_Method":"UPI"},{"Order_ID":"ORD0195","Date":"2026-05-01","Customer_ID":"CUST537","Product":"Shoes","Category":"Fashion","Region":"North","Quantity":4,"Price":2000,"Revenue":8000,"Payment_Method":"UPI"},{"Order_ID":"ORD0196","Date":"2026-03-15","Customer_ID":"CUST514","Product":"Watch","Category":"Accessories","Region":"North","Quantity":2,"Price":2500,"Revenue":5000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0197","Date":"2026-01-09","Customer_ID":"CUST806","Product":"Watch","Category":"Accessories","Region":"South","Quantity":1,"Price":2500,"Revenue":2500,"Payment_Method":"Credit Card"},{"Order_ID":"ORD0198","Date":"2026-04-01","Customer_ID":"CUST859","Product":"Shoes","Category":"Fashion","Region":"West","Quantity":3,"Price":2000,"Revenue":6000,"Payment_Method":"Debit Card"},{"Order_ID":"ORD0199","Date":"2026-01-11","Customer_ID":"CUST314","Product":"Headphones","Category":"Electronics","Region":"West","Quantity":3,"Price":1500,"Revenue":4500,"Payment_Method":"UPI"},{"Order_ID":"ORD0200","Date":"2026-01-30","Customer_ID":"CUST460","Product":"Watch","Category":"Accessories","Region":"South","Quantity":3,"Price":2500,"Revenue":7500,"Payment_Method":"Cash on Delivery"}];
+
+// ===== CHART INSTANCES =====
+const charts = {};
+
+function fmt(n) {
+  if (n >= 10000000) return '₹' + (n/10000000).toFixed(1) + 'Cr';
+  if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
+  if (n >= 1000) return '₹' + (n/1000).toFixed(1) + 'K';
+  return '₹' + n.toLocaleString('en-IN');
+}
+function fmtFull(n) { return '₹' + n.toLocaleString('en-IN'); }
+
+const COLORS = {
+  Electronics: '#00c6b8',
+  Fashion: '#f5a623',
+  Accessories: '#8b5cf6',
+  East: '#3b82f6',
+  West: '#8b5cf6',
+  North: '#22c55e',
+  South: '#f97316',
+  UPI: '#00c6b8',
+  'Credit Card': '#3b82f6',
+  'Debit Card': '#f5a623',
+  'Cash on Delivery': '#e74c3c'
+};
+
+function getFiltered() {
+  const month = document.getElementById('f-month').value;
+  const regions = [...document.getElementById('f-region').selectedOptions].map(o => o.value);
+  const cats = [...document.getElementById('f-category').selectedOptions].map(o => o.value);
+  const payment = document.getElementById('f-payment').value;
+  return RAW.filter(r => {
+    const m = r.Date.substring(0,7);
+    if (month !== 'All' && m !== month) return false;
+    if (!regions.includes(r.Region)) return false;
+    if (!cats.includes(r.Category)) return false;
+    if (payment !== 'All' && r.Payment_Method !== payment) return false;
+    return true;
+  });
+}
+
+function resetFilters() {
+  document.getElementById('f-month').value = 'All';
+  document.getElementById('f-payment').value = 'All';
+  ['f-region','f-category'].forEach(id => {
+    const sel = document.getElementById(id);
+    [...sel.options].forEach(o => o.selected = true);
+  });
+  applyFilters();
+}
+
+function makeOrUpdate(id, type, data, options) {
+  if (charts[id]) { charts[id].destroy(); }
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, { type, data, options: { ...{ responsive: true, maintainAspectRatio: true, animation: { duration: 250 } }, ...options } });
+}
+
+function applyFilters() {
+  const data = getFiltered();
+  document.getElementById('filter-count').textContent = `Showing ${data.length} of 200 orders`;
+  updateKPIs(data);
+  renderMonthly(data);
+  renderCategory(data);
+  renderRegion(data);
+  renderPayment(data);
+  renderProduct(data);
+  renderBubble(data);
+  renderAovPayment(data);
+  renderCatRegion(data);
+  renderPriceTier(data);
+  renderTopCustomers(data);
+  renderHeatmap(data);
+  renderInsights(data);
+}
+
+function updateKPIs(data) {
+  const rev = data.reduce((s,r) => s+r.Revenue, 0);
+  const qty = data.reduce((s,r) => s+r.Quantity, 0);
+  const customers = new Set(data.map(r => r.Customer_ID)).size;
+  const aov = data.length ? Math.round(rev / data.length) : 0;
+  document.getElementById('kpi-rev').textContent = fmt(rev);
+  document.getElementById('kpi-rev-sub').innerHTML = `<span style="color:var(--teal)">●</span> ${fmtFull(rev)} total`;
+  document.getElementById('kpi-orders').textContent = data.length.toLocaleString();
+  document.getElementById('kpi-orders-sub').textContent = `${data.length} transactions`;
+  document.getElementById('kpi-cust').textContent = customers.toLocaleString();
+  document.getElementById('kpi-cust-sub').textContent = `${customers} unique buyers`;
+  document.getElementById('kpi-aov').textContent = fmt(aov);
+  document.getElementById('kpi-aov-sub').textContent = `per order avg`;
+  document.getElementById('kpi-qty').textContent = qty.toLocaleString();
+  document.getElementById('kpi-qty-sub').textContent = `units sold`;
+}
+
+function renderMonthly(data) {
+  const months = ['2026-01','2026-02','2026-03','2026-04','2026-05'];
+  const labels = ['Jan','Feb','Mar','Apr','May'];
+  const revByMonth = {}, qtyByMonth = {};
+  months.forEach(m => { revByMonth[m] = 0; qtyByMonth[m] = 0; });
+  data.forEach(r => {
+    const m = r.Date.substring(0,7);
+    if (revByMonth[m] !== undefined) { revByMonth[m] += r.Revenue; qtyByMonth[m] += r.Quantity; }
+  });
+  makeOrUpdate('chart-monthly', 'line', {
+    labels,
+    datasets: [
+      { label: 'Revenue (₹)', data: months.map(m => revByMonth[m]), borderColor: '#00c6b8', backgroundColor: 'rgba(0,198,184,0.12)', tension: 0.4, fill: true, yAxisID: 'y', pointRadius: 5, pointHoverRadius: 8, borderWidth: 2.5 },
+      { label: 'Units Sold', data: months.map(m => qtyByMonth[m]), borderColor: '#f5a623', backgroundColor: 'rgba(245,166,35,0.08)', tension: 0.4, fill: false, yAxisID: 'y1', pointRadius: 5, pointHoverRadius: 8, borderWidth: 2, borderDash: [6,3] }
+    ]
+  }, {
+    plugins: { legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 14, padding: 16 } }, tooltip: { callbacks: { label: ctx => ctx.datasetIndex===0 ? fmtFull(ctx.raw) : ctx.raw + ' units' } } },
+    scales: {
+      y: { type: 'linear', position: 'left', ticks: { callback: v => fmt(v), font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+      y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 10 } } }
+    }
+  });
+}
+
+function renderCategory(data) {
+  const cats = ['Electronics','Fashion','Accessories'];
+  const vals = cats.map(c => data.filter(r=>r.Category===c).reduce((s,r)=>s+r.Revenue,0));
+  const total = vals.reduce((a,b)=>a+b,0);
+  makeOrUpdate('chart-category','doughnut',{
+    labels: cats,
+    datasets:[{ data: vals, backgroundColor: cats.map(c => COLORS[c]), borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }]
+  },{
+    cutout:'65%',
+    plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${fmtFull(ctx.raw)} (${total?((ctx.raw/total)*100).toFixed(1):0}%)` } } }
+  });
+  const legend = document.getElementById('cat-legend');
+  legend.innerHTML = cats.map((c,i) => `<div class="legend-item"><div class="legend-dot" style="background:${COLORS[c]}"></div><span><strong>${c}</strong> — ${total?((vals[i]/total)*100).toFixed(1):0}%</span></div>`).join('');
+}
+
+function renderRegion(data) {
+  const regions = ['East','West','North','South'];
+  const revs = regions.map(r => data.filter(d=>d.Region===r).reduce((s,d)=>s+d.Revenue,0));
+  const avgs = regions.map(r => { const rd = data.filter(d=>d.Region===r); return rd.length ? Math.round(rd.reduce((s,d)=>s+d.Revenue,0)/rd.length) : 0; });
+  makeOrUpdate('chart-region','bar',{
+    labels: regions,
+    datasets:[
+      { type:'bar', label:'Revenue', data: revs, backgroundColor: regions.map(r => COLORS[r]+'cc'), borderRadius: 8, yAxisID:'y' },
+      { type:'line', label:'Avg Order Value', data: avgs, borderColor:'#1a2744', backgroundColor:'rgba(26,39,68,0.08)', tension:0.4, pointRadius:6, pointHoverRadius:9, yAxisID:'y1', borderWidth:2.5 }
+    ]
+  },{
+    plugins:{ legend:{position:'top',labels:{font:{size:11},boxWidth:14}}, tooltip:{ callbacks:{ label: ctx => ctx.datasetIndex===0 ? fmtFull(ctx.raw) : fmt(ctx.raw) + ' avg' } } },
+    scales:{ y:{ ticks:{callback:v=>fmt(v),font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'} }, y1:{ position:'right', grid:{drawOnChartArea:false}, ticks:{callback:v=>fmt(v),font:{size:10}} } }
+  });
+}
+
+function renderPayment(data) {
+  const methods = ['UPI','Credit Card','Debit Card','Cash on Delivery'];
+  const counts = methods.map(m => data.filter(r=>r.Payment_Method===m).length);
+  makeOrUpdate('chart-payment','pie',{
+    labels: methods,
+    datasets:[{ data:counts, backgroundColor:methods.map(m=>COLORS[m]), borderWidth:3, borderColor:'#fff', hoverOffset:8 }]
+  },{
+    plugins:{ legend:{position:'bottom',labels:{font:{size:11},boxWidth:14,padding:12}}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} orders (${counts.reduce((a,b)=>a+b,0)?((ctx.raw/counts.reduce((a,b)=>a+b,0))*100).toFixed(1):0}%)`}} }
+  });
+}
+
+function renderProduct(data) {
+  const prods = ['Laptop','Phone','Headphones','Shoes','Watch','Bag','T-Shirt'];
+  const catMap = {Laptop:'Electronics',Phone:'Electronics',Headphones:'Electronics',Shoes:'Fashion',Watch:'Accessories',Bag:'Accessories','T-Shirt':'Fashion'};
+  const revs = prods.map(p => data.filter(r=>r.Product===p).reduce((s,r)=>s+r.Revenue,0));
+  const sorted = prods.map((p,i)=>({p,r:revs[i]})).sort((a,b)=>b.r-a.r);
+  makeOrUpdate('chart-product','bar',{
+    labels: sorted.map(x=>x.p),
+    datasets:[{ label:'Revenue', data:sorted.map(x=>x.r), backgroundColor:sorted.map(x=>COLORS[catMap[x.p]]+'cc'), borderRadius:6 }]
+  },{
+    indexAxis:'y',
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>fmtFull(ctx.raw)}} },
+    scales:{ x:{ticks:{callback:v=>fmt(v),font:{size:10}}, grid:{color:'rgba(0,0,0,0.04)'}}, y:{ticks:{font:{size:12,weight:'600'}}} }
+  });
+}
+
+function renderBubble(data) {
+  const cats = ['Electronics','Fashion','Accessories'];
+  const prods = ['Laptop','Phone','Headphones','Shoes','Watch','Bag','T-Shirt'];
+  const catMap = {Laptop:'Electronics',Phone:'Electronics',Headphones:'Electronics',Shoes:'Fashion',Watch:'Accessories',Bag:'Accessories','T-Shirt':'Fashion'};
+  const datasets = cats.map(cat => ({
+    label: cat,
+    data: prods.filter(p=>catMap[p]===cat).map(p => {
+      const pd = data.filter(r=>r.Product===p);
+      const rev = pd.reduce((s,r)=>s+r.Revenue,0);
+      const qty = pd.reduce((s,r)=>s+r.Quantity,0);
+      const aov = pd.length ? rev/pd.length : 0;
+      return { x: rev/1000, y: qty, r: Math.max(6, Math.min(40, aov/5000)), label: p };
+    }),
+    backgroundColor: COLORS[cat]+'99', borderColor: COLORS[cat], borderWidth: 2
+  }));
+  makeOrUpdate('chart-bubble','bubble',{ datasets },{
+    plugins:{ legend:{position:'top',labels:{font:{size:11},boxWidth:14}}, tooltip:{callbacks:{label:ctx=>`${ctx.raw.label}: Rev ₹${(ctx.raw.x).toFixed(0)}K, Qty ${ctx.raw.y}`}} },
+    scales:{ x:{title:{display:true,text:'Revenue (₹ Thousands)',font:{size:11}},ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}, y:{title:{display:true,text:'Total Units Sold',font:{size:11}},ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}} }
+  });
+}
+
+function renderAovPayment(data) {
+  const methods = ['UPI','Credit Card','Debit Card','Cash on Delivery'];
+  const avgs = methods.map(m => { const d=data.filter(r=>r.Payment_Method===m); return d.length ? Math.round(d.reduce((s,r)=>s+r.Revenue,0)/d.length) : 0; });
+  makeOrUpdate('chart-aov-payment','bar',{
+    labels: methods.map(m=>m.replace(' ','\n')),
+    datasets:[{ label:'Avg Order Value', data:avgs, backgroundColor:methods.map(m=>COLORS[m]+'cc'), borderRadius:8 }]
+  },{
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>fmtFull(ctx.raw)}} },
+    scales:{ y:{ticks:{callback:v=>fmt(v),font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}} }
+  });
+}
+
+function renderCatRegion(data) {
+  const cats = ['Electronics','Fashion','Accessories'];
+  const regions = ['East','West','North','South'];
+  makeOrUpdate('chart-catregion','bar',{
+    labels: regions,
+    datasets: cats.map(cat => ({
+      label: cat,
+      data: regions.map(r => data.filter(d=>d.Region===r&&d.Category===cat).reduce((s,d)=>s+d.Revenue,0)),
+      backgroundColor: COLORS[cat]+'cc', borderRadius: 4
+    }))
+  },{
+    plugins:{ legend:{position:'top',labels:{font:{size:11},boxWidth:14}}, tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fmtFull(ctx.raw)}`}} },
+    scales:{ x:{stacked:true}, y:{stacked:true,ticks:{callback:v=>fmt(v),font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}} }
+  });
+}
+
+function renderPriceTier(data) {
+  const tiers = ['Low (<₹5K)','Mid (₹5K–₹20K)','High (>₹20K)'];
+  const colors = ['#22c55e','#f5a623','#e74c3c'];
+  const vals = [
+    data.filter(r=>r.Revenue<5000).reduce((s,r)=>s+r.Revenue,0),
+    data.filter(r=>r.Revenue>=5000&&r.Revenue<=20000).reduce((s,r)=>s+r.Revenue,0),
+    data.filter(r=>r.Revenue>20000).reduce((s,r)=>s+r.Revenue,0)
+  ];
+  const total = vals.reduce((a,b)=>a+b,0);
+  makeOrUpdate('chart-price-tier','doughnut',{
+    labels: tiers,
+    datasets:[{ data:vals, backgroundColor:colors, borderWidth:3, borderColor:'#fff', hoverOffset:8 }]
+  },{
+    cutout:'65%',
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmtFull(ctx.raw)} (${total?((ctx.raw/total)*100).toFixed(1):0}%)`}} }
+  });
+  const legend = document.getElementById('tier-legend');
+  legend.innerHTML = tiers.map((t,i) => `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div><span><strong>${t}</strong> — ${total?((vals[i]/total)*100).toFixed(1):0}%</span></div>`).join('');
+}
+
+function renderTopCustomers(data) {
+  const map = {};
+  data.forEach(r => {
+    if (!map[r.Customer_ID]) map[r.Customer_ID] = { rev:0, orders:0, region:r.Region };
+    map[r.Customer_ID].rev += r.Revenue;
+    map[r.Customer_ID].orders++;
+  });
+  const top = Object.entries(map).sort((a,b)=>b[1].rev-a[1].rev).slice(0,10);
+  const tbody = document.getElementById('top-cust-body');
+  tbody.innerHTML = top.map(([id,d],i) => `
+    <tr>
+      <td style="font-weight:700;color:var(--teal)">${i+1}</td>
+      <td style="font-weight:600">${id}</td>
+      <td style="font-weight:700;color:var(--navy)">${fmtFull(d.rev)}</td>
+      <td>${d.orders}</td>
+      <td>${fmtFull(Math.round(d.rev/d.orders))}</td>
+      <td><span class="tag tag-${d.region.toLowerCase()}">${d.region}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderHeatmap(data) {
+  const months = [{k:'2026-01',n:'Jan',days:31},{k:'2026-02',n:'Feb',days:28},{k:'2026-03',n:'Mar',days:31},{k:'2026-04',n:'Apr',days:30},{k:'2026-05',n:'May',days:3}];
+  const countMap = {};
+  data.forEach(r => { countMap[r.Date] = (countMap[r.Date]||0)+1; });
+  const maxVal = Math.max(...Object.values(countMap),1);
+  const weeks = ['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  
+  let html = '<div style="display:flex;gap:20px;flex-wrap:wrap">';
+  months.forEach(m => {
+    const firstDate = new Date(m.k+'-01');
+    const firstDay = firstDate.getDay();
+    html += `<div><div style="font-weight:700;font-size:12px;color:var(--navy);margin-bottom:6px">${m.n} 2026</div>`;
+    html += '<table class="heatmap-table"><thead><tr>';
+    weeks.forEach(w => html += `<th>${w}</th>`);
+    html += '</tr></thead><tbody>';
+    
+    let row = '<tr><td class="heatmap-row-label"></td>';
+    let dayOffset = firstDay===0 ? 6 : firstDay-1;
+    for(let i=0;i<dayOffset;i++) row += '<td style="background:transparent"></td>';
+    let colCount = dayOffset;
+    
+    for(let d=1;d<=m.days;d++) {
+      const key = m.k+'-'+String(d).padStart(2,'0');
+      const cnt = countMap[key]||0;
+      const intensity = Math.round((cnt/maxVal)*220);
+      const bg = cnt===0 ? '#f0f3f8' : `rgb(${0+Math.round(intensity*0.1)},${198-Math.round(intensity*0.5)},${184-Math.round(intensity*0.6)})`;
+      const textColor = cnt > maxVal*0.5 ? '#fff' : '#1a2744';
+      row += `<td style="background:${bg};color:${textColor}" title="${key}: ${cnt} orders">${d}</td>`;
+      colCount++;
+      if(colCount % 7 === 0 && d < m.days) { row += '</tr>'; html += row; row='<tr><td class="heatmap-row-label"></td>'; }
+    }
+    const remaining = 7 - (colCount%7);
+    if(remaining < 7) for(let i=0;i<remaining;i++) row += '<td style="background:transparent"></td>';
+    row += '</tr>';
+    html += row + '</tbody></table></div>';
+  });
+  html += '</div>';
+  document.getElementById('heatmap-container').innerHTML = html;
+}
+
+function renderInsights(data) {
+  if (!data.length) { document.getElementById('insights-grid').innerHTML = '<div class="insight-card info"><div class="insight-icon">ℹ️</div><div class="insight-text">No data matches the current filters.</div></div>'; return; }
+  
+  // Calculate insights
+  const totalRev = data.reduce((s,r)=>s+r.Revenue,0);
+  const cats = ['Electronics','Fashion','Accessories'];
+  const catRevs = cats.map(c => ({c, r: data.filter(d=>d.Category===c).reduce((s,d)=>s+d.Revenue,0)}));
+  catRevs.sort((a,b)=>b.r-a.r);
+  const topCat = catRevs[0];
+  const bottomCat = catRevs[catRevs.length-1];
+  
+  const regions = ['East','West','North','South'];
+  const regRevs = regions.map(r=>({r, v:data.filter(d=>d.Region===r).reduce((s,d)=>s+d.Revenue,0)})).sort((a,b)=>b.v-a.v);
+  
+  const payments = ['UPI','Credit Card','Debit Card','Cash on Delivery'];
+  const payRevs = payments.map(p=>({p, v:data.filter(d=>d.Payment_Method===p).reduce((s,d)=>s+d.Revenue,0), c:data.filter(d=>d.Payment_Method===p).length})).sort((a,b)=>b.v-a.v);
+  
+  const laptopRev = data.filter(r=>r.Product==='Laptop').reduce((s,r)=>s+r.Revenue,0);
+  const laptopPct = totalRev ? ((laptopRev/totalRev)*100).toFixed(0) : 0;
+  
+  const avgQty = data.length ? (data.reduce((s,r)=>s+r.Quantity,0)/data.length).toFixed(1) : 0;
+  
+  const highValOrders = data.filter(r=>r.Revenue>=100000).length;
+  const hvPct = data.length ? ((highValOrders/data.length)*100).toFixed(0) : 0;
+
+  const insights = [
+    { type:'success', icon:'🏆', text:`<strong>${topCat.c}</strong> leads revenue at <strong>${fmtFull(topCat.r)}</strong> — ${totalRev?((topCat.r/totalRev)*100).toFixed(0):0}% of total. <strong>${bottomCat.c}</strong> contributes the least at ${fmtFull(bottomCat.r)}.` },
+    { type:'info', icon:'🗺️', text:`<strong>${regRevs[0].r}</strong> region dominates with <strong>${fmtFull(regRevs[0].v)}</strong> in revenue. <strong>${regRevs[regRevs.length-1].r}</strong> trails at ${fmtFull(regRevs[regRevs.length-1].v)}.` },
+    { type:'warning', icon:'💳', text:`<strong>${payRevs[0].p}</strong> is the top payment channel by revenue (<strong>${fmtFull(payRevs[0].v)}</strong>). It accounts for <strong>${payRevs[0].c}</strong> of ${data.length} orders.` },
+    { type:'danger', icon:'💻', text:`Laptop alone drives <strong>${laptopPct}%</strong> of total revenue (<strong>${fmtFull(laptopRev)}</strong>) — heavy dependency on a single high-ticket product.` },
+    { type:'success', icon:'📊', text:`Average quantity per order is <strong>${avgQty} units</strong>. <strong>${hvPct}%</strong> of orders (${highValOrders}) are high-value (≥₹1L) — key segment for retention focus.` },
+    { type:'info', icon:'📅', text:`Data spans Jan–May 2026 with <strong>${data.length} orders</strong> across <strong>${new Set(data.map(r=>r.Customer_ID)).size}</strong> unique customers. Avg order value: <strong>${fmt(data.length?Math.round(totalRev/data.length):0)}</strong>.` }
+  ];
+  
+  document.getElementById('insights-grid').innerHTML = insights.map(ins => `
+    <div class="insight-card ${ins.type}">
+      <div class="insight-icon">${ins.icon}</div>
+      <div class="insight-text">${ins.text}</div>
+    </div>
+  `).join('');
+}
+
+// ===== BOOT =====
+applyFilters();
+</script>
+</body>
+</html>
